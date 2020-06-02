@@ -1,0 +1,12 @@
+numpy
+pandas
+matplotlib
+seaborn
+os
+sklearn
+DataReader
+tensorflow
+keras
+nltk
+psaw
+statsmodels
