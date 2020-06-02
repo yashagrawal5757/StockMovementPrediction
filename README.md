@@ -65,6 +65,6 @@ The pipeline followed in the project is as follows:
 3. Multiple Linear Regression with Backward Elimination  resulted in **11** most important columns  and **93%** R2 Score
 4. Model verified on 2017-2019 data led to **98%** R2 score
 5. Model results on a random data point is given below
-![Results](results.png)
+![Results](results.PNG)
 
 
