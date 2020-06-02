@@ -1,5 +1,3 @@
-
-
 #psaw
 from psaw import PushshiftAPI
 
@@ -9,6 +7,7 @@ import datetime as dt
 
 start_epoch=int(dt.datetime(2017, 1, 1).timestamp())
 end_epoch=int(dt.datetime(2020, 1, 1).timestamp())
+
 headlines_data = list(api.search_submissions(after=start_epoch,
                              before=end_epoch,
                             subreddit='usanews',
@@ -23,7 +22,9 @@ def get_date(created):
 timestamp = headlines_data["created"].apply(get_date)
 headlines_data= headlines_data.assign(timestamp = timestamp)
 #drop unix timestamp dates
+
 headlines_data.drop(['created','created_utc'],axis=1,inplace=True)
+
 # extract only date part from timestamp
 for row in range(len(headlines_data)):
     headlines_data['timestamp'].iloc[row]=headlines_data['timestamp'].iloc[row].date()
@@ -32,17 +33,16 @@ for row in range(len(headlines_data)):
 x = headlines_data.groupby(by='timestamp')
 count = x.count()
 count.sort_values(ascending=False,by='title')
-# get only those rows where total news>25. we ill be testing
-# on more than top 25
+
+# get only those rows where total news>25. we ill be testing on more than top 25
 y = count[x.count()>=25]
 y =y.dropna()
 y = y.reset_index()
+
 #getting titles and no of news of one date together
 news =pd.merge(headlines_data,y,on='timestamp')
 
-#logic for making final dictionary of date with news
-#as columns(key-> date,val->news titles) & exporting
-#each file to csv format
+#logic for making final dictionary of date with news as columns(key-> date,val->news titles) & exporting each file to csv format
 i=1
 for date in headlines_data['timestamp'].unique():
     y = headlines_data[headlines_data['timestamp']==date]
@@ -71,7 +71,8 @@ for date in headlines_data['timestamp'].unique():
     data.to_csv(file_name)
     i=int(i)+1
 #csv files exported
-#---------------------------------------------------    
+    
+#---------------------------------------------------------------------    
 # combining all csv files in the directory
 import glob
 import pandas as pd
@@ -84,13 +85,13 @@ combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ])
 #export to csv
 combined_csv.to_csv( "combined.csv", index=False, encoding='utf-8-sig')
 
-#make changes to combined_csv (insert column names at top row
-#and make it as combinednew.csv)
-#-------------------------------------------------------------
+#make changes to combined_csv (insert column names at top row and make it as combinednew.csv)
+#--------------------------------------------------------------------
 
 
 livenews= pd.read_csv('combinednew.csv',error_bad_lines=False)
 from datetime import datetime
+
 #changing date to right format
 date_object=[]
 x=livenews['date']
@@ -105,14 +106,16 @@ livenews['date']=date_object
   
 livenews['date'].nunique()
 livenews.notnull().any(axis = 0)
+
 # There is no column where all values are null. Thus some dates contain
 #30, while some contain 70 news for that date
+
 list=['Date']
 for i in range(0,73):
     list.append(str(i))
 livenews.columns=list
-# we will apply nlp on above test set to find senitment
-#get news only first
+
+# we will apply nlp on above test set to find sentiment and get news only first
 livenews2=livenews.drop('Date',axis=1)
 livenews2 = livenews2.replace('b\"|b\'|\\\\|\\\"', '', regex=True)
 livenews2.replace("[^a-zA-Z]"," ",regex=True, inplace=True)
@@ -122,6 +125,8 @@ livenews=livenews.replace(np.nan," ")
 paras = []
 for row in range(0,len(livenews2.index)):
     paras.append(' '.join(str(x) for x in livenews2.iloc[row,0:73]))
+    
+    
 paras[0]    # news for 31st dec2019
 bowparas=countvector.transform(paras)
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -204,7 +209,7 @@ wend='2020/01/10'
 
 stock2= economic(start,end,dataset)
 #economic variables made
-#----------------------------------
+#--------------------------------------------------------------------
 daily_returns = stock2['Close'].pct_change()
 stock2['daily_returns'] = daily_returns
 
@@ -233,18 +238,17 @@ stock2.drop([
          'daily_returns',
        'yesterday_cumdr', 'vol'],axis=1,inplace=True)
 
-
-
-#stock2 has 55 columns but stockdata had 61 columns coz of dummy
-#variable of year(2008-16 vs 2017-20)
-#--------------------------------------------------
+#---------------------------------------------------------------------
 # applying our previously tained reg model
+
 xr2_lr= stock2.drop(['Close','Low','High'],axis=1)
 cols3=[ 'sentiment', 'Open',  'yesterday_open','yesterday_high','yesterday_low','yesterday_close','Volume','GDP','RETAIL_SALES_EXCLFOOD','CSIndex','RETAIL_SALES_INCLFOOD']
 xr2_lr = xr2_lr[cols3]
 xr2_lr=np.append(arr=np.ones((687,1)).astype(int),values=xr2_lr,axis=1)
 xr2_lr= pd.DataFrame(xr2_lr)
 yr2=stock2["Close"]
+
+
 from sklearn.linear_model import LinearRegression
 yp2lr = lr.predict(xr2_lr)
 from sklearn.metrics import r2_score
@@ -257,43 +261,31 @@ plt.xlabel("Testing instances")
 plt.ylabel("Close price")
 plt.legend()
 plt.show()
-#--------------------------------------------------------
+
+#--------------------------------------------------------------------
 #random forest
-xr2= stock2.drop(['Close','Low','High'
-                    
-                    ],axis=1)
+xr2= stock2.drop(['Close','Low','High'],axis=1)
 yr2=stock2["Close"]
- 
 yp2 = rf.predict(xr2)
 print(r2_score(yr2,yp2))
-
-
-
 #----------------------------------------------------------------------
 #decision tree
-xr2= stock2.drop(['Close','Low','High'
-                    
-                    ],axis=1)
+xr2= stock2.drop(['Close','Low','High'],axis=1)
 yr2=stock2["Close"]
- 
+
 yp2 = dt.predict(xr2)
 print(r2_score(yr2,yp2))
 
-
-
 #------------------------------------------------------------------
 #svr
-xr2= stock2.drop(['Close','Low','High'
-                    
-                    ],axis=1)
+xr2= stock2.drop(['Close','Low','High'],axis=1)
 yr2=stock2["Close"]
-
 yp2 = svr.predict(xr2)
 print(r2_score(yr2,yp2))
 #------------------------------------------------------
 # direcn
-
 # reexecute MLR
+
 # predicting movement
 yest_close = stock2['yesterday_close']
 date=stock3['Date']

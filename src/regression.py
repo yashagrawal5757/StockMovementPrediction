@@ -4,13 +4,16 @@ stockdata=pd.read_csv('dji.csv', encoding = "ISO-8859-1")
 stockdata = stockdata.drop(stockdata.index[277])
 stockdata = stockdata.drop(stockdata.index[348])
 stockdata = stockdata.drop(stockdata.index[681])
-# Removed those nan datesbefore adding news headlines column
-#merge both news and stock dataset on basis of date
+
+# Removed those nan datesbefore adding news headlines column.
+
+#Merge both news and stock dataset on basis of date
 # size matches with original df
 
 stockdata[stockdata['Close']!= stockdata['Adj Close']]
 #this shows close and adj close are same for all rows
 # drop adj close
+
 stockdata.drop(['Adj Close'],axis=1,inplace=True)
 
 
@@ -24,8 +27,8 @@ sns.countplot(x='sentiment',data=stockdata)
 ## Stock data EDA
 stockdata.head()
 print(stockdata.shape)
-print(stockdata.columns) #to know name of columns
-print(stockdata.dtypes)  #to know datatype of columns.
+print(stockdata.columns) 
+print(stockdata.dtypes)  
 desc = stockdata.describe().transpose()
 
 stockdata.isnull().sum() 
@@ -36,8 +39,10 @@ stockdata.info()
 #volume is in int-> change to float
 stockdata['Volume'] = stockdata['Volume'].astype(float)
 stockdata.info()
-#------------------------------------------------------
+
+#----------------------------------------------------------------------
 #creation of derived variables
+
 # date is of type object. We change it to date time type
 stockdata['Date'] = pd.to_datetime(stockdata['Date'])
 
@@ -47,30 +52,23 @@ stockdata['Month'] = stockdata['Date'].dt.month
 stockdata['Day'] = stockdata['Date'].dt.day
 stockdata['Quarter'] = stockdata['Date'].dt.quarter
 # 3 months form a quarter
+
 stockdata['semester'] = np.where(stockdata['Quarter'].isin([1,2]),1,2)
 #quarter1,2(6 months) is sem1 , later is sem2
+
 stockdata['Dayofweek'] = stockdata['Date'].dt.dayofweek
 stockdata['Dayofweek_name'] = stockdata['Date'].dt.day_name()
 #Monday is given 0
-#stockdata['is_weekend'] = np.where(stockdata['Dayofweek_name'].isin(['Sunday','Saturday']),1,0)
-# we drop is_weekend since trading is closed on weekends 
-#and all days are weekdays in dataset
-#stockdata.drop(['is_weekend'],axis=1,inplace=True)
 stockdata['Dayofyear'] = stockdata['Date'].dt.dayofyear
 stockdata['Weekofyear'] = stockdata['Date'].dt.weekofyear
 
 
-#_-----------------------------------------------
-# making yesterday columns for close and adj close to fight
-# 100% corr. Also we need this step since there is no use
-#of our model to predict closing price at day end when we will
-# already be having actual close at day end. So we want our
-#model to predict on the basis of past data. Thus yesterday
-#columns will act as indep variables. This way we can use our
-# model at any time of day, not necessarily day end since we
-#will have open,max,low price at any point of day along with
-# previous day close and adj close. We can predict todays
-# close and adj close
+#_---------------------------------------------------------------------
+
+# making yesterday columns for close and adj close to fight 100% corr. Also we need this step since there is no use of our model to predict closing price at day end when we will
+# already be having actual close at day end. So we want our model to predict on the basis of past data. Thus yesterday columns will act as indep variables. This way we can use our
+# model at any time of day, not necessarily day end since we will have open,max,low price at any point of day along with  previous day close and adj close. We can predict todays  close and adj close
+
 stockdata.corr()['Close']
 stockdata['yesterday_open'] = stockdata['Open'].shift()
 stockdata['yesterday_close'] = stockdata['Close'].shift()
@@ -106,30 +104,31 @@ yend='2017/01/01'
 wstart='2008/07/10'
 wend='2016/07/10'
 
-# gdp RELEASED on 1st day of every quarter. So we adjust dates
-# so that we get data corresponding to stockdata. Then we convert
-#quarterly freq to daily freq by appending value at before date
-# to all the dates until next quarter results comes.
+# gdp RELEASED on 1st day of every quarter. So we adjust dates  so that we get data corresponding to stockdata. Then we convert quarterly freq to daily freq by appending value at before date  to all the dates until next quarter results comes.
 # our date- 2018/08/08->2016/06/30
 #gdp(quarterly frequency)
 
 def economic(start,end,dataset):
     quarterly = data.DataReader(['GDP','MSPUS'], 'fred', start=qstart, end=qend)
     quarterly = quarterly.asfreq('D',method='ffill')
+    
     # change index as numeric and make date index as a column
     quarterly = quarterly.reset_index()
+    
     # to merge with stockdata, we need to remove weekends and extra dates
+    
     quarterly['Dayofweekname'] = quarterly['DATE'].dt.day_name()
     quarterly['Dayofweekname'] = quarterly['Dayofweekname'][quarterly['Dayofweekname'].apply(lambda day: day not in ['Saturday','Sunday'] )]
+    
     # dropping weekend dates
     quarterly.dropna(axis=0,inplace=True)
+    
     #indices gets messed up. fix them
     quarterly.reset_index(drop=True, inplace=True)
     index1 = quarterly[quarterly['DATE']==start].index.values.astype(int)[0]
     index2 = quarterly[quarterly['DATE']==end].index.values.astype(int)[0]
-
     
-     #FETCH THESE ROWS.REMOVE OTHERS
+    #FETCH THESE ROWS.REMOVE OTHERS
     quarterly = quarterly.iloc[index1:index2,:]
     quarterly.reset_index(drop=True, inplace=True)
     
@@ -148,11 +147,14 @@ def economic(start,end,dataset):
     monthly.isnull().sum()
     monthly = monthly.asfreq('D',method='ffill')
     monthly = monthly.reset_index()
+    
     # to merge with stockdata, we need to remove weekends and extra dates
     monthly['Dayofweekname'] = monthly['DATE'].dt.day_name()
     monthly['Dayofweekname'] = monthly['Dayofweekname'][monthly['Dayofweekname'].apply(lambda day: day not in ['Saturday','Sunday'] )]
+    
     # dropping weekend dates
     monthly.dropna(axis=0,inplace=True)
+    
     #indices gets messed up. fix them
     monthly.reset_index(drop=True, inplace=True)
     index1 = monthly[monthly['DATE']==start].index.values.astype(int)[0]
@@ -226,10 +228,7 @@ stockdata= economic(start,end,dataset)
 #economic variables made
 #-------------------------------------------------------------
 
-# to visualize monthly variables, we need monthly frequency
-#data , since we cant use data typecasted in daily frequency
-#since we will get plots having steps   
-#stockdata.drop(['cum_month'],axis=1,inplace=True)
+# to visualize monthly variables, we need monthly frequency data , since we cant use data typecasted in daily frequency since we will get plots having steps   
 cum_month = stockdata[['Date','Month']]
 new=[]
 def update():
@@ -269,6 +268,7 @@ stockdata.columns
 corr = stockdata.corr()
 
 #gdp,houseprices calculated quarterly , since we didnt repeat above procedure
+
 # for quarters, we check with year only
 ax = sns.lineplot(x='Year',y='GDP',data=stockdata)
 ax.set( ylabel='Billions of dollars')
@@ -279,15 +279,13 @@ plt.show()
 ax = sns.lineplot(x='Year',y='Housepricemedian',data=stockdata)
 ax.set( ylabel='dollars')
 plt.show()
-#price of housing dropped badly during stock market crash as that was
-# the prime reason during recession that time
+#price of housing dropped badly during stock market crash as that was  the prime reason during recession that time
 
 #now for monthly calculated variables, use cum_month
 ax = sns.lineplot(x='cum_month',y='FEDFUNDS',data=stockdata)
 ax.set( ylabel='%')
 plt.show()
-# interest rates decreased sharply in 2009, that led to recession
-# as people had housing loans at a very low interest
+# interest rates decreased sharply in 2009, that led to recession as people had housing loans at a very low interest
 
 ax = sns.lineplot(x='cum_month',y='CPI',data=stockdata)
 ax.set( ylabel='Index')
@@ -308,8 +306,7 @@ plt.show()
 ax = sns.lineplot(x='cum_month',y='CES',data=stockdata)
 ax.set( ylabel='Thousands of persons')
 plt.show()
-# In 2016, of 300 mn population 144 million were employed in an 
-#organization
+# In 2016, of 300 mn population 144 million were employed in an organization
 
 # Retail sales excluding food
 ax = sns.lineplot(x='cum_month',y='RETAIL_SALES_EXCLFOOD',data=stockdata)
@@ -337,15 +334,13 @@ plt.show()
 ax = sns.lineplot(x='cum_month',y='LEI',data=stockdata)
 ax.set( ylabel='Percent')
 plt.show()
-# As seen in 2009 index becam negative since growth was expected
-# to drop during recession
+# As seen in 2009 index becam negative since growth was expected to drop during recession
 
 #onefamily- No of one family houses sold
 ax = sns.lineplot(x='cum_month',y='ONEFAMILY',data=stockdata)
 ax.set( ylabel='Thousands')
 plt.show()
-# No of houses decreased to 100,00 during stock market crash and
-#subsequent years
+# No of houses decreased to 100,00 during stock market crash and subsequent years
 
 # Construction started at houses
 ax = sns.lineplot(x='cum_month',y='NEWHOUSEUNITS',data=stockdata)
@@ -377,7 +372,8 @@ ax.set( ylabel='Billions of dollars')
 plt.show()
 
 # In 2016 there were 13 trillions worth assets eld by US
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------
+
 # Visualization on sentiment variable
 stockdata.groupby('sentiment')['sentiment'].value_counts()
 #776 negative sentiments
@@ -387,6 +383,7 @@ stockdata.groupby('sentiment')['sentiment'].value_counts()
 sns.countplot(x='Year',data=stockdata,hue='sentiment')
 # 2015 and 2016 had fairly high positive sentiments.It means it
 #was a good year for stock market
+
 sns.lineplot(x='Year',y='Close',data=stockdata)
 
 sns.countplot(x='Month',data=stockdata,hue='sentiment')
@@ -397,16 +394,14 @@ sns.lineplot(x='Month',y='Close',data=stockdata)
 
 plt.figure(figsize=(14,8))
 sns.countplot(x='Day',data=stockdata,hue='sentiment')
-# No special seasonality except every 30th day of month is
-#risky for stock market as sentiments are balanced for 0/1
+# No special seasonality except every 30th day of month is risky for stock market as sentiments are balanced for 0/1
 
 sns.countplot(x='Dayofweek',data=stockdata,hue='sentiment')
 sns.countplot(x='Dayofweek_name',data=stockdata,hue='sentiment')
 # More postive news on friday
 
 stockdata.groupby('sentiment')['Weekofyear'].value_counts()
-# 39th week of yr has maximum negative sentiment. mostly september
-#month-> In stock market terms its called SEPTEMBER EFFECT
+# 39th week of yr has maximum negative sentiment. mostly september month-> In stock market terms its called SEPTEMBER EFFECT
 # 2nd,49th week of year has maximum positive sentiment
 # JANUARY Is considered a good month generally-> january effect
 
@@ -420,23 +415,29 @@ sns.lineplot(x='Year',y='Close',data=stockdata)
 #average of closing prices wrt each month
 plt.plot(stockdata.groupby('Month')['Close'].mean())
 # sept,oct are worst months as revealed by our sentiment above also
+
 plt.plot(stockdata.groupby('Day')['Close'].mean())
 #no definite trend
+
 plt.plot(stockdata.groupby('Dayofweek_name')['Close'].mean())
 # friday see low closing price since next days are weekend
+
 sns.boxplot(x="Dayofweek_name", y="Close", data=stockdata,palette='rainbow')
 
 plt.plot(stockdata.groupby('Weekofyear')['Close'].mean())
 #september effect
+
 plt.figure(figsize=(12,5))
 sns.boxplot(x="Weekofyear", y="Close", data=stockdata,palette='rainbow')
 
 #39th-42nd week i.e sept-oct is worst, year end is very good
+
 plt.plot(stockdata.groupby('Quarter')['Close'].mean())
 #oct,nov,dec is worst quarter, summer months lie in best quarter
+
 sns.boxplot(x="Quarter", y="Close", data=stockdata,palette='rainbow')
 
-#------------------------------------------------------
+#----------------------------------------------------------------------
 #plot closing price of each year 
 # each colour indicates year
 plt.figure(figsize=(12,5))
@@ -455,12 +456,15 @@ plt.show()
 # see columns with which closing price has max correlation with
 stockdata.corr()['Close'].sort_values(ascending=False).head(10)
 # corr with retail sales, gdp,cpi
+
 # lets visualize 
 sns.jointplot(x='RETAIL_SALES_INCLFOOD',y='Close',kind='reg',data=stockdata)
-# good correlation as points are closer to straight line,
-#top and right bars show distplot of individual variables
+# good correlation as points are closer to straight line, top and right bars show distplot of individual variables
+
 sns.jointplot(x='RETAIL_SALES_EXCLFOOD',y='Close',kind='reg',data=stockdata)
+
 sns.jointplot(x='GDP',y='Close',kind='reg',data=stockdata)
+
 sns.jointplot(x='CPI',y='Close',kind='reg',data=stockdata)
 
 sns.jointplot(x='PPI',y='Close',kind='reg',data=stockdata)
@@ -468,14 +472,12 @@ sns.jointplot(x='PPI',y='Close',kind='reg',data=stockdata)
 
 
 #--------------------------------------------------------
-# Create new column called daily returns so that we can find
-# return or how much drop or rise in close price each day
-#daily return= (close/close.shift())-1
+# Create new column called daily returns so that we can find  return or how much drop or rise in close price each day
 #if you multiply by 100 you get %change everyday
 daily_returns = stockdata['Close'].pct_change()
 stockdata['daily_returns'] = daily_returns
 stockdata.corr()['daily_returns'].sort_values(ascending=False)
-# daily returns has 23% corr with close->great
+# daily returns has 23% corr with close->great 
 #daily returns has 53% corr with sentiment->very grat
 
 # Daily returns show increase(+value) or decrease(-value) wrt previous day    
@@ -484,8 +486,7 @@ stockdata.corr()['daily_returns'].sort_values(ascending=False)
 
 stockdata['daily_returns'].max() # Maximum return is 11% on a day
 stockdata['daily_returns'].min() # Maximum return is -7.8% on a day
-# There was a sharp increase and decrease during year 2009 
-# owing to stock market crash. 
+# There was a sharp increase and decrease during year 2009  owing to stock market crash. 
 
 # Plot of daily returns
 fig = plt.figure()
@@ -495,23 +496,20 @@ ax1.set_xlabel("Daily returns %")
 ax1.set_ylabel("Percent")
 ax1.set_title("DJI daily returns data")
 plt.show()
-# the returns are quite volatile and the stock 
-#can move +/- 2.5% on any given day
+# the returns are quite volatile and the stock  can move +/- 2.5% on any given day
 
 print(daily_returns.describe())
 ##  The plot looks normally distributed with mean value around 0
 
-# Cumulative returns tell us how much we earn or loss in a
-#given timeperod.say you invest 1$ today. how much will you
-#earn totally on that 1 yr after 3 yrs say. Calculated by
-#summing each row of daily returns
+# Cumulative returns tell us how much we earn or loss in a given timeperod.say you invest 1$ today. how much will you earn totally on that 1 yr after 3 yrs say. 
+#Calculated by summing each row of daily returns
+
 cum_daily_returns = (1 + daily_returns).cumprod()
 stockdata['cum_daily_returns']= cum_daily_returns
 
 fig = plt.figure()
 sns.relplot(x='Year',y='cum_daily_returns',data=stockdata,kind='line')
-# as shown if you invest 1$ in dji stocks in 2008, you will
-#get 1.45$ in 2016
+# as shown if you invest 1$ in dji stocks in 2008, you will get 1.45$ in 2016
 
 #plot of cumulative daily returns
 fig = plt.figure()
@@ -525,18 +523,15 @@ plt.show()
 stockdata['cum_daily_returns'].max()
 stockdata['cum_daily_returns'].min()
 
-# There has been days when the prices dropped by 56%(1->0.55) and there
-#have been days when stocks rose upto 156% if we see from 2008
+# There has been days when the prices dropped by 56%(1->0.55) and there have been days when stocks rose upto 156% if we see from 2008
 
 sns.lineplot(x='Date',y='cum_daily_returns',data=stockdata)
 # as we see it faced 56%drop in 2009 and its 156% hike around 2015-16
 
 #find correlation of close and stockdata
 stockdata.corr()['cum_daily_returns'].sort_values(ascending=False)
-# we have 100% corr with close which is intuitive. if we know
-# cum_daily_returns for a period say after 365 days,we can
-# easily calculate closing price on 365th day by simple maths
-# we cant use this column as 100% corr will mess with our model
+# we have 100% corr with close which is intuitive. if we know  cum_daily_returns for a period say after 365 days,we can
+# easily calculate closing price on 365th day by simple maths.  we cant use this column as 100% corr will mess with our model
 # lets see if we can use yesterday_cum_daily_return
 
 stockdata['yesterday_cumdr'] = stockdata['cum_daily_returns'].shift()
@@ -544,17 +539,17 @@ stockdata.corr()['yesterday_cumdr'].sort_values(ascending=False)
 
 
 
-#-------------------------------------------
+#----------------------------------------------------------------------
 # Finding the volatality i.e change in variance over the period
 
-# highly volatile means more risky. Here we use stddev as metric
-# we use rolling std dev which takes as parameter a window no of days.
+# highly volatile means more risky. Here we use stddev as metric. we use rolling std dev which takes as parameter a window no of days.
 # within these days it gives equal weight to study risk. 
 #we choose 75 days 
 min_periods = 75
 # Calculate the volatility
 vol = daily_returns.rolling(min_periods).std() * np.sqrt(min_periods) 
 stockdata['vol']=vol
+
 # Plot the volatility
 #sns.lineplot(x='Date',y='vol',data=stockdata)
 # As the plot shows the risk of DJI has gradually decreased over the years
@@ -564,9 +559,6 @@ sns.boxplot(x=stockdata['Open'])
 sns.boxplot(x=stockdata['High'])
 sns.boxplot(x=stockdata['Low'])
 sns.boxplot(x=stockdata['Close'])
-#sns.boxplot(x=stockdata['daily_returns'])
-#sns.boxplot(x=stockdata['cum_daily_returns'])
-
 
 # Plot a histogram for all the columns of the dataframe. This shows the frequency of values in all the columns
 import matplotlib.pyplot as plt
@@ -578,6 +570,7 @@ plt.figure(figsize=(20,20))
 plt.title('Pearson correlation of continuous features', y=1.05, size=12)
 sns.heatmap(stockdata.corr(),cmap='coolwarm',linecolor='white',linewidths=1,vmax=1.0, square=True,  annot=True)
 plt.show()
+
 # sentiment has strong reln with daily_returns
 # year has strong correlation with many variables
 # closing price has very strong corr with maxm economic variables we made
@@ -586,14 +579,13 @@ plt.show()
 
 #visualization done
 
-#-----------------------------------------------------------
-
+#---------------------------------------------------------------------
 # performing regression model
-# we hve 40 columns. lets look at null values in columns. 
+
 #since reg model does not expect nan values
 
 stockdata.isnull().sum()
-#stockdata=stockdata[:-1]
+
 # we need to fill vol and cum_dailyreturns by bfill
 stockdata['daily_returns'].fillna(method='bfill',inplace=True)
 stockdata['cum_daily_returns'].fillna(method='bfill',inplace=True)
@@ -606,12 +598,12 @@ cols
 stockdata2 = stockdata.copy()
 stockdata=stockdata2.copy()
 stockdata.drop(['Date','Dayofweek_name','headlines','cum_month','cum_daily_returns'],axis=1,inplace=True)
-############stockdata.reset_index(inplace=True,drop=True)
-#stockdata.drop(['index'],axis=1,inplace=True)
 stockdata.columns
+
 # Trend Analysis
 sns.lineplot(x='Year',y='Housepricemedian',data=stockdata)
 sns.lineplot(x='Year',y='Close',data=stockdata)
+# similarly done for other columns 
 
 stockdata.drop([
         'Housepricemedian', 'FEDFUNDS'
@@ -620,19 +612,21 @@ stockdata.drop([
          'daily_returns',
        'yesterday_cumdr', 'vol'],axis=1,inplace=True)
 
-
 # bad columns dropped. 
 stockdata.info()
 desc = stockdata.describe().transpose()
 
-#----------------------------------------------------
+#----------------------------------------------------------------------
 # Applying RNN LSTM
 #20%split
 data_train = stockdata.iloc[:1588]
 data_test = stockdata.iloc[1588:]
+
 data_train.corr()['Close']
+
 #shifting close to 1st column(insert and drop)
 closetrain=data_train['Close']
+
 #good way of shifting one column to beginning
 data_train.drop(labels=['Close','Open','High','Low'],axis=1,inplace=True)
 data_train.insert(0, 'Close',value=closetrain)
@@ -664,9 +658,7 @@ print(x_train.shape)
 print(y_train.shape)   
 
 # prepare test dataset
-# in testing we need last 60 days data for each cell since
-# that is req of lstm. so we add tail of train set to test set
-# so that there are past 60 days data for 1st observ. in test set
+# in testing we need last 60 days data for each cell since  that is req of lstm. so we add tail of train set to test set  so that there are past 60 days data for 1st observ. in test set
 
 past_60days = data_train.tail(step_size)
 closetest=data_test['Close']
@@ -695,6 +687,7 @@ print(y_test.shape)
                             
 
 x_train.shape[1]
+
 #LSTM model
 lstm_model = Sequential()
 lstm_model.add(LSTM(50,activation="relu",return_sequences=True, input_shape=(x_train.shape[1],28)))
@@ -738,13 +731,6 @@ plt.plot(y_pred,color='blue')
 plt.legend()
 
 # Our model performs bad in the end side data
-"""
-# we can see same visualization as 
-#x= pd.DataFrame(y_test)
-#x2 = pd.DataFrame(y_pred)
-#x3 = pd.concat([x,x2],axis=1)
-#x3.plot()
-"""
 
 
 from sklearn.metrics import mean_squared_error,mean_absolute_error,explained_variance_score
@@ -759,8 +745,10 @@ print(rmse) #825
 explained_variance_score(y_test,y_pred)
 
 #execute seperately below code
+
 #comparing model against ideal trend line
 plt.scatter(y_test,y_pred)
+
 # Perfect predictions
 plt.plot(y_test,y_test,'r')
 
@@ -805,11 +793,12 @@ def backwardElimination(x, sl):
  
 x1_optimal = backwardElimination(x1_opt, SL)
 x1_optimal_df = pd.DataFrame(x1_optimal)
-#x1_optimal_df = x1_optimal_df.drop(0,axis=1)
-#58 COLUMNS REDUCED TO 11..check them manually
+#44 COLUMNS REDUCED TO 11..check them manually
 xr.columns
+
 cols3=[ 'sentiment', 'Open',  'yesterday_open','yesterday_high','yesterday_low','yesterday_close','Volume','GDP','RETAIL_SALES_EXCLFOOD','CSIndex','RETAIL_SALES_INCLFOOD']
 # extracting these columns in test set
+
 x2=pd.DataFrame(x2)
 x2 = x2[cols3]
 x2=np.append(arr=np.ones((196,1)).astype(int),values=x2,axis=1)
@@ -838,8 +827,8 @@ xr= stockdata.drop(['Close','Low','High'
                     ],axis=1)
 yr=stockdata["Close"]
 
-x1= xr.iloc[0:1787]  #90
-x2 = xr.iloc[1788:] #10%
+x1= xr.iloc[0:1787] 
+x2 = xr.iloc[1788:] 
 y1= yr.iloc[0:1787]  
 y2 = yr.iloc[1788:] 
 
@@ -867,7 +856,7 @@ for i in feature_importance.index:
     colname.append(x1.columns[i])
 feature_importance['colname']=colname
 
-#------------------------------------------------------
+#------------------------------------------------------------------------
 
 # Decision tree train test split
 xr= stockdata.drop(['Close','Low','High'
@@ -882,6 +871,7 @@ y2 = yr.iloc[1788:]
 from sklearn.tree import DecisionTreeRegressor
 dt = DecisionTreeRegressor(random_state=0)
 dt.fit(x1,y1)
+
 # Predicting a new result
 yp = dt.predict(x2)
 print(r2_score(y2,yp))
@@ -920,5 +910,9 @@ print(mae) #90
 plt.plot(y2)
 plt.plot(yp,c='r')
 #bad model
-#-------------------------------------------------------
-# mlr performed best
+#----------------------------------------------------------------------
+# Conclusion:
+# We tried out EDA understanding behavior of each and every variable
+# We implemented various visualization plots to understand trend and behavior of variables across time
+#We created various economic and non economic variables that contributed towards good regression results
+# We implemented various regression models . MLR with backward elimination performed best
