@@ -65,7 +65,11 @@ The pipeline followed in the project is as follows:
 3. Multiple Linear Regression with Backward Elimination  resulted in **11** most important columns  
 4. Model verified on 2017-2019 data led to **0.83** R2 score
 5. Model results on a random data point is given below
-![Results](results.PNG) 
+
+Model prediction:
+![Results](results.PNG)
+
+Actual Closing price on 2019-12-04 
 ![Results](Actual-closing-price-DJI.png)
 
 
