@@ -58,6 +58,18 @@ The pipeline followed in the project is as follows:
 - Regression Model Building
 - Model validation
 
+### Derived variables
+Many economic indices were studied from Federal Reserve Economic Data(FRED) and Moody's Analytics and their trends were assessed for stability across years. The data for these indices are publically released by US Government. The frequency of the published indices vary weekly, monthly, quarterly and yearly. Given below is the list of all the 37 derived variables used in the project and each one of the economic index can be better understood by searching for the tag given in brackets from [here](https://fred.stlouisfed.org/)
+
+- Quarterly : Gross Domestic Product(GDP), Median Sales Price of Houses Sold (MSPUS)
+- Monthly : Federal Funds Rate(FEDFUNDS), Consumer Price Index (CPILFESL), Producer Price Index (PPI), Unemployment Rate (UNRATE), Current Employee Statistics (PAYEMS), Advanced Retail Sales(RSXFS), Industrial Production (INDPRO), UMich Consumer Sentiment (UMCSENT), Leading economic Index (USSLIND), One Family Houses Sold (HSN1F), Housing Starts (HOUST), Total Business Inventories (BUSINV), Total Business Sales (TOTBUSSMSA), Advanced Retail Sales (RSAFS), 
+
+-Yearly :  Inflation Rate (FPCPITOTLZGUSA)
+-Weekly : M2 Money stock (M2)
+
+-Other derived variables : daily returns, Cumulative daily returns, volatility, date related derived features
+
+  
 ### Results
 
 1. **37** new variables were created that contributed to the model performance
